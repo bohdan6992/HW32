@@ -1,32 +1,40 @@
-let fs = require('fs');
-const os = require('os');
-const path = require('path');
+const request = require('request');
+const https = require('https')
+const fs = require('fs');
+const URL = 'https://dou.ua'
+let str = ''
 
-let dir = './test_folder';
+const getHTML = (HTMLBody) =>{
+  const start = HTMLBody.indexOf('Радимо почитати');
+  const end = HTMLBody.indexOf('2005—2021');
+  console.log(start, end);
+  for(let i = start; i < end; i++){
+    str =`${str}${HTMLBody[i]}`;
+  };
+};
 
-if (!fs.existsSync(dir)){
-  fs.mkdirSync(dir);
+const getAndPushImagesURL = () => {
+  URLArr =[];
+  reg = /src="([^"]*)/;
+  for(let i = 1; i < 20; i=i+2){
+    URLArr.push(str.split(reg)[i]);
+  }
+  console.log(URLArr);
+};
+
+const downloadAndSavePhotos = () => {
+  for(let i=0; i<10; i++) {
+    let url = URLArr[i];
+    // fs.mkdirSync('./photos');
+    https.get(url, resp => resp.pipe(fs.createWriteStream(`./photos/photo_${i}.jpeg`)));
+  }
 }
 
-fs.writeFile("./test_folder/test.txt",
- `Information about the computer:
-  Name: ${os.hostname()};
-  OS version: ${os.version()};
-  OS architecture: ${os.arch()};
-  OS platform: ${os.platform()};
-  OS type: ${os.type()};
-  Release: ${os.release()};
-  CPU  endianness: ${os.endianness()};
-  Total memory: ${os.totalmem()};
-  Free memory: ${os.freemem()};
-  Load averages: ${os.loadavg()}.`
-, (err) => {
-  if (err) throw new Error(err);
-  console.log("The file is saved!");
-  console.log("******************");
-  const info = fs.readFileSync(path.join(__dirname, 'test_folder', 'test.txt'), 'utf8');
-  console.log(info);
+request(URL, function (error, response, body) {
+  if (error) throw error; // Print the error if one occurred
+  console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
+  
+  getHTML(body);
+  getAndPushImagesURL();
+  downloadAndSavePhotos();
 });
-
-
-
